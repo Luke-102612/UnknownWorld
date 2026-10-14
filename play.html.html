@@ -1,0 +1,63 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>未知世界｜原型 0.1</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#173047;color:#eef7ff;font-family:system-ui,-apple-system,sans-serif;touch-action:none}canvas{width:100vw;height:100vh;display:block}
+.panel{background:#081827dd;border:1px solid #9edcff77;border-radius:13px;backdrop-filter:blur(8px);box-shadow:0 5px 20px #0004}
+#hud{position:fixed;inset:0;pointer-events:none;padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
+#brand{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:12px;padding:9px 12px;font-weight:800;letter-spacing:2px}small{display:block;font-weight:400;font-size:10px;letter-spacing:1px;color:#b7d5e9}
+#quest{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 10px);width:44vw;max-width:245px;padding:10px;font-size:12px;line-height:1.5}#quest b{display:block;color:#a1edff}
+#msg{display:none;position:absolute;left:50%;top:24%;transform:translateX(-50%);padding:10px 14px;max-width:85vw;text-align:center;font-size:13px}
+#bottom{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 12px);left:12px;right:12px;display:flex;justify-content:space-between;align-items:end;gap:10px}
+#stick{width:112px;height:112px;border-radius:50%;background:#07142199;border:1px solid #c9edff88;position:relative;pointer-events:auto;touch-action:none;flex-shrink:0}#nub{position:absolute;width:46px;height:46px;left:33px;top:33px;border-radius:50%;background:#c5efffbb;border:2px solid #fff}
+.actions{display:flex;gap:8px;pointer-events:auto}.act{width:62px;height:62px;border-radius:50%;border:1px solid #bde9ff;background:#0b2034eF;color:white;font-size:12px;font-weight:700;touch-action:manipulation;-webkit-appearance:none;appearance:none}
+#hint{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 130px);left:50%;transform:translateX(-50%);background:#07142199;border-radius:18px;padding:6px 10px;font-size:10px;white-space:nowrap}
+#screen{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:18px;background:linear-gradient(145deg,#071321f2,#163346f2);overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y}.card{width:min(540px,100%);padding:22px;border:1px solid #9edcff77;border-radius:20px;background:#0a1b2cef;box-shadow:0 15px 60px #0008}
+h1{margin:0;font-size:clamp(30px,8vw,43px);letter-spacing:5px}.sub{color:#a5d3ee;font-size:12px;letter-spacing:2px;margin-bottom:14px}.card p{font-size:14px;line-height:1.7;color:#d8e8f3}.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice{background:#132d43;color:#fff;border:1px solid #789bb5;border-radius:12px;padding:13px 10px;text-align:left;cursor:pointer;touch-action:manipulation;-webkit-appearance:none;appearance:none}.choice.sel{border:2px solid #a1edff;background:#1d4158}.choice b{display:block;margin-bottom:4px}.choice span{font-size:11px;color:#c2d7e6}.primary{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(90deg,#5abbd9,#789be9);color:#061622;font-size:16px;font-weight:800;cursor:pointer;touch-action:manipulation;-webkit-appearance:none;appearance:none}#done{display:none}
+</style></head><body><canvas id="game"></canvas>
+<div id="hud"><div id="brand" class="panel">未知世界<small>PROTOTYPE 0.1 · 覺醒之地</small></div><div id="quest" class="panel"><b>探索任務</b><span id="qt">尋找 3 個記憶碎片（0/3）</span></div><div id="msg" class="panel"></div><div id="hint">左側搖桿移動　靠近藍色遺物後按「互動」</div><div id="bottom"><div id="stick"><div id="nub"></div></div><div class="actions"><button type="button" class="act" id="run">奔跑</button><button type="button" class="act" id="use">互動</button></div></div></div>
+<div id="screen"><div class="card" id="start"><h1>未知世界</h1><div class="sub">UNKNOWN WORLD · 可玩原型 0.1</div><p>你因神祕的異世界傳送事件來到「覺醒之地」。這裡沒有任何人類居民，只有野生動物、未知生命，以及沉睡在草原深處的古老遺跡。</p><p><b>選擇主角（二選一）</b></p><div class="choices"><button type="button" class="choice sel" data-c="male"><b>男主角</b><span>冷靜、堅定、擅長探索</span></button><button type="button" class="choice" data-c="female"><b>女主角</b><span>可愛、勇敢、堅強獨立</span></button></div><p><button type="button" class="primary" id="go">進入異世界</button></p><p style="font-size:11px;color:#91abc1">手機：左側搖桿移動。電腦：WASD／方向鍵移動，E 互動，Shift 奔跑。</p></div><div class="card" id="done"><h1>遺跡已回應</h1><div class="sub">第一個探索目標完成</div><p>你收集了全部 3 個記憶碎片。遺跡深處似乎還藏著更大的秘密……</p><p>Prototype 0.1 完成！下一步可以加入更多既有生物、正式角色模型與更大的地圖。</p><button type="button" class="primary" id="again">再探索一次</button></div></div>
+<script>
+(()=>{const cv=document.querySelector('canvas'),c=cv.getContext('2d');let W,H,D,sel='male',started=false,done=false,running=false,joy={x:0,y:0},keys={},last=performance.now(),msgT=0;
+function resize(){D=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*D;cv.height=H*D;c.setTransform(D,0,0,D,0,0)}addEventListener('resize',resize);resize();
+const world={w:2200,h:1800};let p,shards,animals,trees,rocks;
+function reset(){p={x:300,y:300,dir:0,speed:170};shards=[{x:650,y:400,got:false},{x:1400,y:700,got:false},{x:900,y:1300,got:false}];animals=[];for(let i=0;i<12;i++)animals.push({x:100+Math.random()*2000,y:100+Math.random()*1600,a:Math.random()*8});trees=[];for(let i=0;i<95;i++)trees.push({x:Math.random()*world.w,y:Math.random()*world.h,r:12+Math.random()*15});rocks=[];for(let i=0;i<75;i++)rocks.push({x:Math.random()*world.w,y:Math.random()*world.h,r:4+Math.random()*9});done=false;quest()}
+function quest(){document.querySelector('#qt').textContent=done?'全部記憶碎片已收集！':`尋找 3 個記憶碎片（${shards.filter(s=>s.got).length}/3）`}
+function say(t){let el=document.querySelector('#msg');el.textContent=t;el.style.display='block';msgT=2.8}
+const choiceButtons=[...document.querySelectorAll('.choice')];
+function chooseCharacter(button){
+  if(!button || !button.dataset.c) return;
+  sel=button.dataset.c;
+  choiceButtons.forEach(x=>{
+    const active=x.dataset.c===sel;
+    x.classList.toggle('sel',active);
+    x.setAttribute('aria-pressed',active?'true':'false');
+  });
+}
+choiceButtons.forEach(b=>{
+  b.setAttribute('aria-pressed',b.dataset.c===sel?'true':'false');
+  b.addEventListener('click',()=>chooseCharacter(b));
+});
+const goButton=document.querySelector('#go');
+goButton.addEventListener('click',()=>{
+  if(started) return;
+  if(sel!=='male' && sel!=='female') sel='male';
+  started=true;
+  document.querySelector('#screen').style.display='none';
+  say((sel==='female'?'你選擇了女主角。':'你選擇了男主角。')+' 你醒來了。這個世界沒有任何人類……先探索四周吧。');
+});
+document.querySelector('#again').onclick=()=>{reset();started=false;document.querySelector('#done').style.display='none';document.querySelector('#start').style.display='block';document.querySelector('#screen').style.display='flex';}
+function interact(){if(!started||done)return;let n=null,dmin=1e9;shards.filter(s=>!s.got).forEach(s=>{let d=Math.hypot(p.x-s.x,p.y-s.y);if(d<dmin){n=s;dmin=d}});if(n&&dmin<70){n.got=true;quest();say('取得記憶碎片！你看見了這個世界過去的模糊影像。');if(shards.every(s=>s.got)){done=true;quest();setTimeout(()=>{document.querySelector('#screen').style.display='flex';document.querySelector('#start').style.display='none';document.querySelector('#done').style.display='block'},800)}}else say('附近沒有可互動的遺物。尋找閃爍的藍色光點。')}
+document.querySelector('#use').onclick=interact;addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key==='e'||e.key==='E')interact();if(e.key==='Shift')running=true});addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key==='Shift')running=false});
+const runBtn=document.querySelector('#run');runBtn.onpointerdown=e=>{running=true;runBtn.setPointerCapture(e.pointerId)};runBtn.onpointerup=runBtn.onpointercancel=()=>running=false;
+const stick=document.querySelector('#stick'),nub=document.querySelector('#nub');let sid=null;function moveJoy(e){let r=stick.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),max=r.width*.34,l=Math.hypot(dx,dy);if(l>max){dx=dx/l*max;dy=dy/l*max}joy={x:dx/max,y:dy/max};nub.style.left=(r.width/2-23+dx)+'px';nub.style.top=(r.height/2-23+dy)+'px'}stick.onpointerdown=e=>{sid=e.pointerId;stick.setPointerCapture(sid);moveJoy(e)};stick.onpointermove=e=>{if(e.pointerId===sid)moveJoy(e)};function stopJoy(e){if(e.pointerId===sid){sid=null;joy={x:0,y:0};nub.style.left='33px';nub.style.top='33px'}}stick.onpointerup=stopJoy;stick.onpointercancel=stopJoy;
+function drawWorld(cx,cy){c.fillStyle='#80a96a';c.fillRect(0,0,W,H);for(let i=0;i<280;i++){let x=(i*197+Math.floor(cx*.25))%world.w-cx+W/2,y=(i*131+Math.floor(cy*.25))%world.h-cy+H/2;c.strokeStyle=i%3?'#a6c982':'#648f5c';c.globalAlpha=.3;c.beginPath();c.moveTo(x,y);c.lineTo(x+4,y-5);c.stroke()}c.globalAlpha=1;
+c.strokeStyle='#c7b78c';c.lineWidth=64;c.globalAlpha=.5;c.beginPath();c.moveTo(-100-cx+W/2,500-cy+H/2);c.bezierCurveTo(500-cx+W/2,420-cy+H/2,700-cx+W/2,850-cy+H/2,1250-cx+W/2,800-cy+H/2);c.stroke();c.globalAlpha=1;
+c.strokeStyle='#58b7ca';c.lineWidth=25;c.globalAlpha=.7;c.beginPath();c.moveTo(1550-cx+W/2,-100-cy+H/2);c.bezierCurveTo(1300-cx+W/2,300-cy+H/2,1770-cx+W/2,700-cy+H/2,1450-cx+W/2,1100-cy+H/2);c.stroke();c.globalAlpha=1;
+rocks.forEach(r=>{let x=r.x-cx+W/2,y=r.y-cy+H/2;if(x<-20||x>W+20||y<-20||y>H+20)return;c.fillStyle='#7e8a7a';c.beginPath();c.ellipse(x,y,r.r*1.2,r.r*.7,-.3,0,7);c.fill()});
+trees.forEach(t=>{let x=t.x-cx+W/2,y=t.y-cy+H/2;if(x<-40||x>W+40||y<-40||y>H+40)return;c.fillStyle='#536e48';c.beginPath();c.ellipse(x,y+7,t.r*.8,t.r*.55,0,0,7);c.fill();c.fillStyle='#3d774c';c.beginPath();c.arc(x,y,t.r,0,7);c.fill();c.fillStyle='#63985c';c.beginPath();c.arc(x-t.r*.25,y-t.r*.25,t.r*.55,0,7);c.fill()});
+shards.forEach(s=>{let x=s.x-cx+W/2,y=s.y-cy+H/2;if(x<-90||x>W+90||y<-90||y>H+90)return;c.fillStyle='#647e7d';c.fillRect(x-25,y-30,50,60);c.strokeStyle='#c0dfd9';c.lineWidth=3;c.strokeRect(x-28,y-33,56,66);if(!s.got){c.globalAlpha=.7+.3*Math.sin(performance.now()/250+s.x);c.fillStyle='#82f6ff';c.shadowColor='#4deaff';c.shadowBlur=22;c.beginPath();c.moveTo(x,y-14);c.lineTo(x+12,y);c.lineTo(x,y+14);c.lineTo(x-12,y);c.closePath();c.fill();c.shadowBlur=0;c.globalAlpha=1;c.fillStyle='white';c.font='11px system-ui';c.textAlign='center';c.fillText('記憶碎片',x,y-45}});animals.forEach(a=>{let x=a.x-cx+W/2,y=a.y-cy+H/2;if(x<-20||x>W+20||y<-20||y>H+20)return;c.fillStyle='#574a38';c.beginPath();c.ellipse(x,y+2,11,7,0,0,7);c.fill();c.fillStyle='#b8a37b';c.beginPath();c.arc(x+8,y-3,5,0,7);c.fill()})}
+function drawPlayer(x,y){c.save();c.translate(x,y);c.rotate(p.dir);c.fillStyle='#172431';c.beginPath();c.ellipse(0,7,11,15,0,0,7);c.fill();c.fillStyle=sel==='male'?'#344b60':'#d982a7';c.fillRect(-9,-7,18,17);c.fillStyle='#f0c9a7';c.beginPath();c.arc(0,-10,8,0,7);c.fill();c.fillStyle=sel==='male'?'#20252d':'#684a43';c.beginPath();c.arc(-1,-13,8,Math.PI,Math.PI*2);c.fill();c.restore()}
+function mini(){let mw=86,mh=70,x=W-mw-14,y=H-mh-145;c.fillStyle='#071421bb';c.strokeStyle='#c3eaff99';c.beginPath();c.roundRect(x,y,mw,mh,8);c.fill();c.stroke();shards.filter(s=>!s.got).forEach(s=>{c.fillStyle='#72f5ff';c.beginPath();c.arc(x+8+s.x/world.w*(mw-16),y+7+s.y/world.h*(mh-14),2.5,0,7);c.fill()});c.fillStyle='white';c.beginPath();c.arc(x+8+p.x/world.w*(mw-16),y+7+p.y/world.h*(mh-14),3,0,7);c.fill()}
+function frame(now){let dt=Math.min((now-last)/1000,.04);last=now;if(started&&!done){let dx=joy.x+(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=joy.y+(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0),l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}if(l>.05)p.dir=Math.atan2(dy,dx);let sp=p.speed*(running?1.65:1);p.x=Math.max(25,Math.min(world.w-25,p.x+dx*sp*dt));p.y=Math.max(25,Math.min(world.h-25,p.y+dy*sp*dt))}
+let cx=Math.max(W/2,Math.min(world.w-W/2,p.x)),cy=Math.max(H/2,Math.min(world.h-H/2,p.y));if(world.w<W)cx=world.w/2;if(world.h<H)cy=world.h/2;drawWorld(cx,cy);drawPlayer(p.x-cx+W/2,p.y-cy+H/2);mini();if(msgT>0){msgT-=dt;if(msgT<=0)document.querySelector('#msg').style.display='none'}requestAnimationFrame(frame)}
+reset();requestAnimationFrame(frame)})();
+</script></body></html>
